@@ -14,7 +14,6 @@ export const routePermissions: Record<string, Role[]> = {
   "/admin": ["admin"],
   "/publisher": ["admin", "publisher"],
   "/monitoring": ["admin", "publisher"],
-  "/screens": ["admin", "publisher"],
 };
 
 /**
@@ -113,7 +112,6 @@ export const config = {
     "/",
     "/admin/:path*", 
     "/publisher/:path*",
-    "/monitoring/:path*",
-    "/screens/:path*"
+    "/monitoring/:path*"
   ],
 };
