@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn( raleway.variable, geistMonoHeading.variable, "font-serif", robotoSlab.variable)}>
+    <html lang="es" suppressHydrationWarning className={cn(geistSans.variable, geistMono.variable, raleway.variable)}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >

@@ -8,7 +8,8 @@ import {
   SparklesIcon,
   ArrowRightIcon,
   ServerIcon,
-  CpuIcon
+  CpuIcon,
+  CalendarIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -34,8 +35,8 @@ export default async function AdminPage() {
               <span>Panel de Control Principal</span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
-              Bienvenido de nuevo, <span className="bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent">{session.user.name}</span>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+              Bienvenido de nuevo, <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent">{session.user.name}</span>
             </h1>
             
             <p className="text-muted-foreground text-sm max-w-xl leading-relaxed">
@@ -151,10 +152,10 @@ export default async function AdminPage() {
                 Gestión de Usuarios
               </Button>
             </Link>
-            <Link href="/monitoring" className="block">
+            <Link href="/admin/schedule" className="block">
               <Button variant="outline" className="w-full justify-start rounded-xl font-semibold border-border/60 hover:bg-accent hover:border-primary/40">
-                <ActivityIcon className="size-4 mr-2 text-primary" />
-                Monitoreo Global
+                <CalendarIcon className="size-4 mr-2 text-primary" />
+                Programación Global
               </Button>
             </Link>
           </div>

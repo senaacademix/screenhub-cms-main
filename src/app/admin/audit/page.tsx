@@ -1,16 +1,14 @@
 import { getSession } from "@/proxy";
 import prisma from "@/lib/prisma";
-import { PublisherContentPage } from "@/features/content";
+import { AdminAuditPage } from "@/features/admin/components/admin-audit-page";
 
-export default async function PublisherContentRoutePage() {
+export default async function AdminAuditRoutePage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session || session.user.role !== "admin") return null;
 
   const publications = await prisma.publication.findMany({
-    where: {
-      createdById: session.user.id,
-    },
     include: {
+      createdBy: true,
       contents: {
         orderBy: { order: "asc" },
       },
@@ -20,5 +18,5 @@ export default async function PublisherContentRoutePage() {
     },
   });
 
-  return <PublisherContentPage publications={publications} />;
+  return <AdminAuditPage publications={publications} />;
 }

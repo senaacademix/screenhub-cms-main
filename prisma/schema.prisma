@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -13,21 +11,22 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  role          String?
-  banned        Boolean?
-  banReason     String?
-  banExpires    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  screens       Screen[]
-  createdContents ContentItem[]
+  id                  String         @id
+  name                String
+  email               String
+  emailVerified       Boolean        @default(false)
+  image               String?
+  role                String?
+  banned              Boolean?
+  banReason           String?
+  banExpires          DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  screens             Screen[]
+  createdContents     ContentItem[]
+  createdPublications Publication[]
 
   @@unique([email])
   @@map("user")
@@ -82,43 +81,89 @@ model Verification {
 }
 
 model Screen {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String         @unique
   location    String
   description String?
-  status      String   @default("active")
-  orientation String   @default("landscape")
-  resolution  String   @default("1920x1080")
-  refreshRate Int      @default(30)
+  status      String         @default("active")
+  orientation String         @default("landscape")
+  resolution  String         @default("1920x1080")
+  refreshRate Int            @default(30)
+  volume      Int            @default(100)
   publisherId String?
-  publisher   User?    @relation(fields: [publisherId], references: [id], onDelete: SetNull)
-  isLocked    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  publisher   User?          @relation(fields: [publisherId], references: [id], onDelete: SetNull)
+  isLocked    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   contents    ContentItem[]
+  schedules   ScheduleItem[]
 
   @@map("screen")
 }
 
+model Publication {
+  id              String         @id @default(cuid())
+  title           String
+  description     String?
+  status          String         @default("DRAFT") // "DRAFT" | "REVIEW" | "PUBLISHED"
+  rejectionReason String?
+  editRequested   Boolean        @default(false)
+  createdById     String?
+  createdBy       User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  contents        ContentItem[]
+  schedules       ScheduleItem[]
+
+  @@map("publication")
+}
+
 model ContentItem {
-  id          String   @id @default(cuid())
-  title       String
-  type        String   @default("image") // "image" | "video" | "text" | "web"
-  url         String?
-  body        String?
-  duration           Int      @default(10) // Display time in seconds
-  transition         String   @default("fade") // Framer motion preset
-  transitionDuration Float    @default(1.0) // Transition animation speed in seconds
-  order              Int      @default(0)
-  isActive    Boolean  @default(true)
-  screenId    String
-  screen      Screen   @relation(fields: [screenId], references: [id], onDelete: Cascade)
-  createdById String?
-  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String       @id @default(cuid())
+  title              String
+  type               String       @default("image") // "image" | "video" | "text" | "web" | "split_anime"
+  url                String?
+  body               String?
+  bgType             String?      @default("gradient") // "color" | "gradient" | "image"
+  bgValue            String?      @default("linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)")
+  duration           Int          @default(10) // Display time in seconds
+  transition         String       @default("fade") // Framer motion preset
+  transitionDuration Float        @default(1.0) // Transition animation speed in seconds
+  order              Int          @default(0)
+  isActive           Boolean      @default(true)
+  publicationId      String?
+  publication        Publication? @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  screenId           String?
+  screen             Screen?      @relation(fields: [screenId], references: [id], onDelete: SetNull)
+  createdById        String?
+  createdBy          User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@map("content_item")
 }
 
+model ScheduleItem {
+  id            String      @id @default(cuid())
+  screenId      String
+  screen        Screen      @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  publicationId String
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  order         Int         @default(0)
+  isActive      Boolean     @default(true)
+  
+  // Time Slots / Franjas Horarias
+  startTime     String?     @default("00:00") // HH:mm format
+  endTime       String?     @default("23:59") // HH:mm format
+  daysOfWeek    String?     @default("ALL")   // "ALL" or "1,2,3,4,5,6,0"
+  startDate     DateTime?
+  endDate       DateTime?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([screenId])
+  @@index([publicationId])
+  @@map("schedule_item")
+}

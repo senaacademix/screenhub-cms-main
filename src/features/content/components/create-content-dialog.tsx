@@ -19,7 +19,8 @@ import {
   PlayIcon,
   RotateCcwIcon,
   FolderIcon,
-  XIcon
+  XIcon,
+  QrCodeIcon
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -52,11 +53,13 @@ import { formatVideoUrl, VideoPlatform } from "@/lib/utils";
 import { createContentSchema, CreateContentSchema, TRANSITION_OPTIONS } from "../schemas/content.schema";
 import { createContentAction } from "../actions/content.actions";
 import { TransitionSelector } from "./transition-selector";
-import { AnimeTextSplit } from "./anime-text-split";
+import { BackgroundSelector } from "./background-selector";
+import { AnimeTextSplit, ANIME_TEXT_EFFECTS } from "./anime-text-split";
+import { QRCodeDisplay } from "./qr-code-display";
 
 interface CreateContentDialogProps {
-  screenId: string;
-  screenName: string;
+  screenId?: string;
+  screenName?: string;
   isLocked?: boolean;
 }
 
@@ -184,7 +187,15 @@ const motionVariants: Record<string, Variants> = {
   },
 };
 
-export function CreateContentDialog({ screenId, screenName, isLocked = false }: CreateContentDialogProps) {
+interface CreateContentDialogProps {
+  publicationId?: string;
+  publicationTitle?: string;
+  screenId?: string;
+  screenName?: string;
+  isLocked?: boolean;
+}
+
+export function CreateContentDialog({ publicationId, publicationTitle, screenId, screenName, isLocked = false }: CreateContentDialogProps = {}) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [testKey, setTestKey] = useState(0);
@@ -196,10 +207,13 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
       type: "image",
       url: "",
       body: "",
+      bgType: "gradient",
+      bgValue: "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)",
       duration: 10,
       transition: "fade",
       transitionDuration: 1.0,
-      screenId: screenId,
+      screenId: screenId || "",
+      publicationId: publicationId || "",
       isActive: true,
     },
   });
@@ -218,16 +232,11 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
   };
 
   const onSubmit = async (values: CreateContentSchema) => {
-    if (isLocked) {
-      toast.error("Esta pantalla está bloqueada por el administrador.");
-      return;
-    }
-
     setIsPending(true);
     try {
-      const res = await createContentAction({ ...values, screenId });
+      const res = await createContentAction({ ...values, publicationId: publicationId || values.publicationId });
       if (res.success) {
-        toast.success("¡Contenido añadido a la secuencia!");
+        toast.success("¡Contenido añadido a la publicación!");
         form.reset({
           title: "",
           type: "image",
@@ -236,7 +245,8 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
           duration: 10,
           transition: "fade",
           transitionDuration: 1.0,
-          screenId: screenId,
+          screenId: "",
+          publicationId: publicationId || "",
           isActive: true,
         });
         setOpen(false);
@@ -260,21 +270,21 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
           className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 px-5"
         >
           <PlusIcon className="mr-2 size-4" />
-          Añadir Contenido
+          Crear Contenido
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen fixed inset-0 translate-x-0 translate-y-0 rounded-none border-none p-0 flex flex-col bg-background/95 backdrop-blur-2xl overflow-hidden z-50">
-        {/* Fullscreen Header (Symmetrical & Aligned) */}
+      <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen fixed inset-0 translate-x-0 translate-y-0 rounded-none border-none p-0 flex flex-col bg-background/95 backdrop-blur-2xl overflow-hidden z-50 [&>button]:hidden">
+        {/* Fullscreen Header */}
         <div className="h-16 px-6 sm:px-8 border-b border-border/60 flex items-center justify-between bg-card/90 shrink-0">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shadow-inner">
               <SparklesIcon className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-black tracking-tight">Programar Nuevo Contenido</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tight">Crear Nuevo Recurso Multimedia</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Pantalla Receptora: <strong className="text-foreground font-bold">{screenName}</strong>
+                Diseña contenidos independientes para enviar a auditoría y programación global.
               </DialogDescription>
             </div>
           </div>
@@ -292,25 +302,15 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
             <Button 
               type="button" 
               size="sm"
-              onClick={form.handleSubmit(onSubmit)} 
+              onClick={form.handleSubmit(onSubmit, (errors) => {
+                const firstError = Object.values(errors)[0]?.message as string;
+                toast.error(firstError || "Por favor completa el título y los campos obligatorios");
+              })} 
               disabled={isPending}
               className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 px-6 h-10"
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar Contenido
-            </Button>
-            
-            <div className="h-6 w-px bg-border/60 mx-1" />
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setOpen(false)}
-              className="size-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
-              title="Cerrar ventana"
-            >
-              <XIcon className="size-5" />
             </Button>
           </div>
         </div>
@@ -340,11 +340,33 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            Título / Identificador del Contenido
+                            {contentType === "image"
+                              ? "Título / Identificador de la Imagen"
+                              : contentType === "video"
+                              ? "Título / Identificador del Video"
+                              : contentType === "text"
+                              ? "Título / Encabezado del Anuncio"
+                              : contentType === "web"
+                              ? "Título / Identificador de la Página Web"
+                              : contentType === "split_anime"
+                              ? "Título / Encabezado Animado (Anime.js)"
+                              : "Título / Llamado a la Acción (Call to Action)"}
                           </FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="Ej. Banner Promocional de Verano" 
+                              placeholder={
+                                contentType === "image"
+                                  ? "Ej. Banner Promocional de Verano"
+                                  : contentType === "video"
+                                  ? "Ej. Video Corporativo Institucional"
+                                  : contentType === "text"
+                                  ? "Ej. Aviso Importante para Clientes"
+                                  : contentType === "web"
+                                  ? "Ej. Dashboard de Indicadores"
+                                  : contentType === "split_anime"
+                                  ? "Ej. Lanzamiento Nuevo Producto"
+                                  : "Ej. Escanea para acceder al Menú Digital"
+                              } 
                               className="h-11 rounded-xl border-border/60 focus-visible:ring-primary/40 text-sm font-medium" 
                               {...field} 
                             />
@@ -379,11 +401,11 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                                 <SelectItem value="text" className="rounded-lg font-medium text-xs py-2">
                                   <FileTextIcon className="size-3.5 inline mr-2 text-amber-400" /> Aviso / Texto Gigante
                                 </SelectItem>
-                                <SelectItem value="web" className="rounded-lg font-medium text-xs py-2">
-                                  <GlobeIcon className="size-3.5 inline mr-2 text-sky-400" /> Sitio Web URL
-                                </SelectItem>
                                 <SelectItem value="split_anime" className="rounded-lg font-medium text-xs py-2">
                                   <SparklesIcon className="size-3.5 inline mr-2 text-indigo-400" /> Split 50/50: Imagen + Texto Anime.js
+                                </SelectItem>
+                                <SelectItem value="qr" className="rounded-lg font-medium text-xs py-2">
+                                  <QrCodeIcon className="size-3.5 inline mr-2 text-violet-400" /> Código QR Interactivo
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -392,44 +414,47 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                         )}
                       />
 
-                      {contentType === "video" ? (
-                        <FormItem>
-                          <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            Duración en Pantalla
-                          </FormLabel>
-                          <div className="h-11 px-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold flex items-center gap-2">
-                            <SparklesIcon className="size-4 text-emerald-400 animate-pulse shrink-0" />
-                            <span>Automática (Tiempo Total del Video)</span>
-                          </div>
-                        </FormItem>
-                      ) : (
-                        <FormField
-                          control={form.control}
-                          name="duration"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Exposición en Pantalla (Segundos)
-                              </FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <ClockIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                                  <Input 
-                                    type="number"
-                                    min={3}
-                                    max={600}
-                                    placeholder="10" 
-                                    className="pl-10 h-11 rounded-xl border-border/60 focus-visible:ring-primary/40 font-bold text-xs" 
-                                    {...field} 
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 10)}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
+                      <FormField
+                        control={form.control}
+                        name="duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                              <span>
+                                {contentType === "video" ? "Duración del Video" : "Exposición en Pantalla (Segundos)"}
+                              </span>
+                              {contentType === "video" && (
+                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                                  {field.value === 0 || !field.value ? "🎬 Video Completo (Hasta el final)" : `⏱️ Límite: ${field.value}s`}
+                                </span>
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <ClockIcon className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                <Input 
+                                  type="number"
+                                  min={0}
+                                  max={600}
+                                  placeholder={contentType === "video" ? "0 = Video Completo (o escribe los segundos)" : "10"} 
+                                  className="pl-10 h-11 rounded-xl border-border/60 focus-visible:ring-primary/40 font-bold text-xs" 
+                                  value={field.value ?? (contentType === "video" ? 0 : 10)} 
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    field.onChange(isNaN(val) ? 0 : val);
+                                  }}
+                                />
+                              </div>
+                            </FormControl>
+                            {contentType === "video" && (
+                              <p className="text-[11px] text-muted-foreground font-medium">
+                                💡 Deja en <strong>0</strong> para reproducir el video completo hasta el final, o escribe los segundos (ej: <strong>10</strong>) para cambiar al cumplirse ese tiempo.
+                              </p>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
                     {contentType !== "text" && (
@@ -474,7 +499,9 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                             <FormItem>
                               <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                                 <span>
-                                  {contentType === "web" 
+                                  {contentType === "qr"
+                                    ? "URL o Enlace de Destino del Código QR"
+                                    : contentType === "web" 
                                     ? "URL Completa del Sitio Web" 
                                     : contentType === "video"
                                     ? `Enlace de Video (${videoPlatform.toUpperCase()})`
@@ -518,27 +545,88 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                       </div>
                     )}
 
-                    {(contentType === "text" || contentType === "image" || contentType === "split_anime") && (
-                      <FormField
-                        control={form.control}
-                        name="body"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                              {contentType === "text" ? "Mensaje Principal del Anuncio" : "Subtítulo / Leyenda Opcional"}
-                            </FormLabel>
-                            <FormControl>
-                              <textarea 
-                                placeholder="Escribe el texto que se desplegará..." 
-                                className="flex min-h-24 w-full rounded-xl border border-border/60 bg-transparent px-3.5 py-2.5 text-xs shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 resize-none font-medium" 
-                                {...field} 
-                                value={field.value || ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                    {(contentType === "text" || contentType === "image" || contentType === "split_anime" || contentType === "qr") && (
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="body"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                {contentType === "text"
+                                  ? "Mensaje Principal del Anuncio"
+                                  : contentType === "qr"
+                                  ? "Instrucciones / Descripción Promocional (Opcional)"
+                                  : "Subtítulo / Leyenda Opcional"}
+                              </FormLabel>
+                              <FormControl>
+                                <textarea 
+                                  placeholder={
+                                    contentType === "text"
+                                      ? "Escribe el aviso completo que se mostrará en pantalla..."
+                                      : contentType === "qr"
+                                      ? "Apunta la cámara de tu smartphone para acceder al contenido..."
+                                      : "Escribe una leyenda opcional para la imagen..."
+                                  } 
+                                  className="flex min-h-24 w-full rounded-xl border border-border/60 bg-transparent px-3.5 py-2.5 text-xs shadow-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 resize-none font-medium" 
+                                  {...field} 
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {contentType === "split_anime" && (
+                          <FormField
+                            control={form.control}
+                            name="transition"
+                            render={({ field }) => (
+                              <FormItem className="space-y-1.5">
+                                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                                  <span className="flex items-center gap-1.5">
+                                    <SparklesIcon className="size-4 text-amber-400 animate-pulse" />
+                                    Efecto de Animación Tipográfica (Anime.js)
+                                  </span>
+                                </FormLabel>
+                                <Select
+                                  onValueChange={(val) => {
+                                    field.onChange(val);
+                                    triggerAnimationTest();
+                                  }}
+                                  value={field.value || "stagger-letters"}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="h-11 rounded-xl border-border/60 focus:ring-primary/40 font-bold text-xs">
+                                      <SelectValue placeholder="Selecciona un efecto de texto" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="rounded-xl border border-border/80 max-h-60">
+                                    {ANIME_TEXT_EFFECTS.map((eff) => (
+                                      <SelectItem key={eff.value} value={eff.value} className="rounded-lg font-bold text-xs">
+                                        {eff.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         )}
-                      />
+
+                        {(contentType === "text" || contentType === "split_anime" || contentType === "qr") && (
+                          <BackgroundSelector
+                            bgType={form.watch("bgType") || "gradient"}
+                            bgValue={form.watch("bgValue") || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"}
+                            onChange={(type, value) => {
+                              form.setValue("bgType", type);
+                              form.setValue("bgValue", value);
+                            }}
+                          />
+                        )}
+                      </div>
                     )}
                   </TabsContent>
 
@@ -641,10 +729,26 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                   )}
 
                   {contentType === "text" && (
-                    <div className="w-full h-full bg-gradient-to-br from-[#0a0f24] via-[#050811] to-[#120e29] text-white flex flex-col items-center justify-center p-6 text-center space-y-3">
-                      <FileTextIcon className="size-12 text-amber-400" />
-                      <h4 className="text-2xl font-black tracking-tight">{titleText || "Título del Anuncio"}</h4>
-                      {textBody && <p className="text-xs text-amber-200/90 font-medium">"{textBody}"</p>}
+                    <div 
+                      className="w-full h-full text-white flex flex-col items-center justify-center p-6 text-center space-y-3 relative overflow-hidden"
+                      style={
+                        form.watch("bgType") === "color"
+                          ? { backgroundColor: form.watch("bgValue") || "#0a0f24" }
+                          : form.watch("bgType") === "gradient"
+                          ? { background: form.watch("bgValue") || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)" }
+                          : form.watch("bgType") === "image" && form.watch("bgValue")
+                          ? { backgroundImage: `url(${form.watch("bgValue")})`, backgroundSize: "cover", backgroundPosition: "center" }
+                          : { background: "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)" }
+                      }
+                    >
+                      {form.watch("bgType") === "image" && form.watch("bgValue") && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-0" />
+                      )}
+                      <div className="relative z-10 space-y-3 flex flex-col items-center justify-center">
+                        <FileTextIcon className="size-12 text-amber-400 mx-auto drop-shadow-md" />
+                        <h4 className="text-2xl font-black tracking-tight drop-shadow-md">{titleText || "Título del Anuncio"}</h4>
+                        {textBody && <p className="text-xs text-amber-200/90 font-medium drop-shadow-md">"{textBody}"</p>}
+                      </div>
                     </div>
                   )}
 
@@ -666,6 +770,19 @@ export function CreateContentDialog({ screenId, screenName, isLocked = false }: 
                       imageUrl={mediaUrl || ""}
                       title={titleText || "Título del Anuncio"}
                       body={textBody || ""}
+                      effect={transitionEffect}
+                      bgType={form.watch("bgType") || "gradient"}
+                      bgValue={form.watch("bgValue") || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"}
+                    />
+                  )}
+
+                  {contentType === "qr" && (
+                    <QRCodeDisplay 
+                      url={mediaUrl || "https://screenhub.com"}
+                      title={titleText || "Escanea para más información"}
+                      body={textBody || ""}
+                      bgType={form.watch("bgType") || "gradient"}
+                      bgValue={form.watch("bgValue") || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"}
                     />
                   )}
                 </motion.div>

@@ -5,6 +5,12 @@ import { getSession } from "@/proxy";
 import { revalidatePath } from "next/cache";
 import { createScreenSchema, CreateScreenSchema, updateScreenSchema, UpdateScreenSchema } from "../schemas/screen.schema";
 
+import crypto from "crypto";
+
+export async function generateScreenToken(): Promise<string> {
+  return `scr_tok_${crypto.randomBytes(16).toString("hex")}`;
+}
+
 export async function createScreenAction(data: CreateScreenSchema) {
   const session = await getSession();
   if (!session || session.user.role !== "admin") {
@@ -17,12 +23,18 @@ export async function createScreenAction(data: CreateScreenSchema) {
   }
 
   try {
+    // Generate secure token if slug is simple or not specified
+    let finalSlug = parsed.data.slug;
+    if (!finalSlug || finalSlug.length < 15) {
+      finalSlug = await generateScreenToken();
+    }
+
     const existing = await prisma.screen.findUnique({
-      where: { slug: parsed.data.slug },
+      where: { slug: finalSlug },
     });
 
     if (existing) {
-      return { success: false, error: "El identificador (slug) ya está en uso. Elige uno diferente." };
+      finalSlug = await generateScreenToken();
     }
 
     const publisherId = parsed.data.publisherId === "unassigned" || !parsed.data.publisherId ? null : parsed.data.publisherId;
@@ -30,6 +42,7 @@ export async function createScreenAction(data: CreateScreenSchema) {
     const screen = await prisma.screen.create({
       data: {
         ...parsed.data,
+        slug: finalSlug,
         publisherId,
       },
       include: {
@@ -141,6 +154,29 @@ export async function toggleScreenLockAction(id: string, isLocked: boolean) {
   } catch (error) {
     console.error("Error toggling screen lock:", error);
     return { success: false, error: "Error al cambiar el bloqueo de edición" };
+  }
+}
+
+export async function rotateScreenTokenAction(id: string) {
+  const session = await getSession();
+  if (!session || session.user.role !== "admin") {
+    return { success: false, error: "No autorizado" };
+  }
+
+  try {
+    const newToken = await generateScreenToken();
+    const screen = await prisma.screen.update({
+      where: { id },
+      data: { slug: newToken },
+      include: { publisher: true },
+    });
+
+    revalidatePath("/admin/screens");
+    revalidatePath("/admin/schedule");
+    return { success: true, data: screen };
+  } catch (error) {
+    console.error("Error rotating screen token:", error);
+    return { success: false, error: "Error al generar nuevo token para la pantalla" };
   }
 }
 

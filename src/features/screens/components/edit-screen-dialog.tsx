@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, TvIcon } from "lucide-react";
+import { Loader2, TvIcon, Volume2Icon, VolumeXIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +55,7 @@ export function EditScreenDialog({ screen, publishers = [], open, onOpenChange }
       orientation: "landscape",
       resolution: "1920x1080",
       refreshRate: 30,
+      volume: 100,
       publisherId: "unassigned",
     },
   });
@@ -70,6 +71,7 @@ export function EditScreenDialog({ screen, publishers = [], open, onOpenChange }
         orientation: screen.orientation as any,
         resolution: screen.resolution || "1920x1080",
         refreshRate: screen.refreshRate || 30,
+        volume: (screen as any).volume ?? 100,
         publisherId: screen.publisherId || "unassigned",
       });
     }
@@ -142,32 +144,6 @@ export function EditScreenDialog({ screen, publishers = [], open, onOpenChange }
 
             <FormField
               control={form.control}
-              name="publisherId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Publicador Asignado</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || "unassigned"}>
-                    <FormControl>
-                      <SelectTrigger className="h-10 rounded-xl border-border/60 focus:ring-primary/40">
-                        <SelectValue placeholder="Selecciona un publicador (opcional)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="rounded-xl border border-border/80">
-                      <SelectItem value="unassigned" className="rounded-lg text-muted-foreground">Sin Publicador Asignado</SelectItem>
-                      {publishers.map((pub) => (
-                        <SelectItem key={pub.id} value={pub.id} className="rounded-lg font-medium">
-                          {pub.name} ({pub.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem>
@@ -226,6 +202,45 @@ export function EditScreenDialog({ screen, publishers = [], open, onOpenChange }
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="volume"
+              render={({ field }) => (
+                <FormItem className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-2">
+                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      {field.value === 0 ? (
+                        <VolumeXIcon className="size-4 text-red-400" />
+                      ) : (
+                        <Volume2Icon className="size-4 text-primary" />
+                      )}
+                      Volumen General (Audio Maestro)
+                    </span>
+                    <span className="text-xs font-black font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+                      {field.value ?? 100}%
+                    </span>
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={field.value ?? 100}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                      />
+                    </div>
+                  </FormControl>
+                  <p className="text-[11px] text-muted-foreground">
+                    💡 Control de volumen maestro para videos y audios emitidos en esta pantalla. (0% = Silencioso).
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

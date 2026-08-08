@@ -20,13 +20,16 @@ export const TRANSITION_OPTIONS = [
 
 export const createContentSchema = z.object({
   title: z.string().min(2, "El título debe tener al menos 2 caracteres"),
-  type: z.enum(["image", "video", "text", "web", "split_anime"]).default("image"),
+  type: z.enum(["image", "video", "text", "web", "split_anime", "qr"]).default("image"),
   url: z.string().optional().nullable(),
   body: z.string().optional().nullable(),
-  duration: z.number().min(3, "La duración mínima es de 3 segundos").default(10),
+  bgType: z.string().optional().nullable().default("gradient"),
+  bgValue: z.string().optional().nullable().default("linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"),
+  duration: z.number().min(0, "La duración no puede ser negativa").default(10),
   transition: z.string().default("fade"),
   transitionDuration: z.number().min(0.2, "La animación mínima es 0.2s").max(5.0, "La animación máxima es 5s").default(1.0),
-  screenId: z.string().min(1, "Debes seleccionar una pantalla"),
+  screenId: z.string().optional().nullable(),
+  publicationId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 

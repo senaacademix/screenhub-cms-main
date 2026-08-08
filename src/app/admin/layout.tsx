@@ -11,7 +11,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="h-svh flex flex-col overflow-hidden bg-background bg-aic-grid relative">
+      <SidebarInset className="h-svh flex flex-col overflow-hidden bg-background relative">
         {/* Background glow effects */}
         <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-primary/10 blur-[120px]" />
         <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/5 blur-[100px]" />

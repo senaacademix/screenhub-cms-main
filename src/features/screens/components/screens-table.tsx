@@ -43,8 +43,8 @@ interface ScreensTableProps {
   onDelete: (screen: ScreenWithPublisher) => void;
 }
 
-import { toggleScreenStatusAction, toggleScreenLockAction } from "../actions/screen.actions";
-import { PowerIcon, LockIcon, UnlockIcon, EyeIcon, PlayIcon } from "lucide-react";
+import { toggleScreenStatusAction, toggleScreenLockAction, rotateScreenTokenAction } from "../actions/screen.actions";
+import { PowerIcon, LockIcon, UnlockIcon, EyeIcon, PlayIcon, KeyIcon } from "lucide-react";
 
 export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
@@ -76,6 +76,22 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
         toast.success(nextLock ? "Edición del publicador BLOQUEADA" : "Edición del publicador DESBLOQUEADA");
       } else {
         toast.error(res.error || "No se pudo cambiar el bloqueo");
+      }
+    } catch {
+      toast.error("Ocurrió un error inesperado");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleRotateToken = async (screen: ScreenWithPublisher) => {
+    setTogglingId(screen.id);
+    try {
+      const res = await rotateScreenTokenAction(screen.id);
+      if (res.success) {
+        toast.success("Nuevo token criptográfico de URL generado exitosamente");
+      } else {
+        toast.error(res.error || "No se pudo generar el token");
       }
     } catch {
       toast.error("Ocurrió un error inesperado");
@@ -143,8 +159,7 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
       <Table>
         <TableHeader className="bg-muted/40 border-b border-border/60">
           <TableRow className="hover:bg-transparent">
-            <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Pantalla & URL</TableHead>
-            <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Publicador Asignado</TableHead>
+            <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Pantalla</TableHead>
             <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Ubicación</TableHead>
             <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Formato</TableHead>
             <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</TableHead>
@@ -154,7 +169,7 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
         <TableBody>
           {screens.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-32 text-center text-muted-foreground font-medium">
+              <TableCell colSpan={5} className="h-32 text-center text-muted-foreground font-medium">
                 No se encontraron pantallas registradas.
               </TableCell>
             </TableRow>
@@ -166,42 +181,28 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
                     <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 text-primary font-bold text-xs shadow-xs">
                       <MonitorIcon className="size-5 text-primary" />
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       <span className="font-bold text-sm tracking-tight text-foreground">{screen.name}</span>
-                      <div className="flex items-center gap-2">
-                        <code className="text-[11px] bg-muted/60 px-2 py-0.5 rounded-md font-mono text-muted-foreground border border-border/40">
-                          /screens/{screen.slug}
-                        </code>
+                      <div>
                         <button 
                           onClick={() => handleCopyUrl(screen.slug)}
-                          title="Copiar URL cliente"
-                          className="text-muted-foreground hover:text-primary transition-colors p-1"
+                          title="Copiar URL de la pantalla para el navegador TV"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/90 bg-primary/10 hover:bg-primary/20 border border-primary/25 px-2.5 py-1 rounded-lg transition-all cursor-pointer shadow-2xs"
                         >
-                          {copiedSlug === screen.slug ? <CheckIcon className="size-3.5 text-emerald-400" /> : <CopyIcon className="size-3.5" />}
+                          {copiedSlug === screen.slug ? (
+                            <>
+                              <CheckIcon className="size-3.5 text-emerald-400" />
+                              <span className="text-emerald-400 font-bold">¡URL Copiada!</span>
+                            </>
+                          ) : (
+                            <>
+                              <CopyIcon className="size-3.5" />
+                              <span>Copiar URL</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-
-                <TableCell className="py-3.5">
-                  <div className="flex flex-col gap-1 items-start">
-                    {screen.publisher ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                        <UserIcon className="size-3" />
-                        {screen.publisher.name}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic bg-muted/40 px-2.5 py-1 rounded-full border border-border/40">
-                        Sin Asignar
-                      </span>
-                    )}
-
-                    {screen.isLocked && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">
-                        <LockIcon className="size-3" /> Edición Bloqueada
-                      </span>
-                    )}
                   </div>
                 </TableCell>
 
@@ -215,7 +216,11 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
                 <TableCell className="py-3.5">
                   <div className="flex flex-col gap-0.5 text-xs">
                     <span className="font-semibold text-foreground uppercase tracking-wider">{screen.orientation}</span>
-                    <span className="text-muted-foreground font-mono text-[11px]">{screen.resolution}</span>
+                    <div className="flex items-center gap-1.5 text-muted-foreground font-mono text-[11px]">
+                      <span>{screen.resolution}</span>
+                      <span>•</span>
+                      <span className="text-primary font-bold">🔊 {(screen as any).volume ?? 100}%</span>
+                    </div>
                   </div>
                 </TableCell>
 
@@ -223,16 +228,28 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
 
                 <TableCell className="py-3.5 text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    {/* Probar Contenido (Preview Mode for Admin) */}
+                    {/* Botón Editar Configuración & Volumen */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => onEdit(screen)}
+                      title="Editar configuración y volumen de la pantalla"
+                      className="h-8 px-2.5 rounded-lg border-border/60 font-bold text-xs gap-1.5 hover:bg-muted shadow-xs"
+                    >
+                      <EditIcon className="size-3.5 text-amber-400" />
+                      <span>Editar</span>
+                    </Button>
+
+                    {/* Vista Previa (Preview Mode for Admin & Publisher) */}
                     <a
                       href={`/screens/${screen.slug}?preview=true`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Probar Contenido antes de publicar"
+                      title="Probar vista previa de la pantalla antes de transmitir"
                     >
                       <Button variant="secondary" size="sm" className="h-8 px-2.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/15 font-bold text-xs gap-1.5 shadow-xs">
                         <EyeIcon className="size-3.5 text-amber-400" />
-                        <span>Probar Contenido</span>
+                        <span>Vista Previa</span>
                       </Button>
                     </a>
 
@@ -258,7 +275,7 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 rounded-xl border border-border/80 bg-card/95 backdrop-blur-md shadow-lg">
+                      <DropdownMenuContent align="end" className="w-64 rounded-xl border border-border/80 bg-card/95 backdrop-blur-md shadow-lg">
                         <DropdownMenuLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Acciones de Control</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
@@ -269,27 +286,18 @@ export function ScreensTable({ screens, onEdit, onDelete }: ScreensTableProps) {
                           {screen.status === "active" ? "Deshabilitar Transmisión" : "Habilitar Transmisión"}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => handleToggleLock(screen)}
-                          className="rounded-lg font-medium cursor-pointer"
-                        >
-                          {screen.isLocked ? (
-                            <>
-                              <UnlockIcon className="mr-2 h-4 w-4 text-emerald-400" />
-                              Desbloquear Edición Publicador
-                            </>
-                          ) : (
-                            <>
-                              <LockIcon className="mr-2 h-4 w-4 text-amber-400" />
-                              Bloquear Edición Publicador
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
                           onClick={() => handleCopyUrl(screen.slug)}
                           className="rounded-lg font-medium cursor-pointer"
                         >
                           <CopyIcon className="mr-2 h-4 w-4 text-primary" />
-                          Copiar URL Cliente
+                          Copiar URL Final (Pantalla Física)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleRotateToken(screen)}
+                          className="rounded-lg font-medium cursor-pointer text-emerald-400"
+                        >
+                          <KeyIcon className="mr-2 h-4 w-4 text-emerald-400" />
+                          Regenerar Token URL Seguro
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => onEdit(screen)}

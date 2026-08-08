@@ -16,7 +16,8 @@ import {
   LockIcon,
   CheckCircle2Icon,
   SparklesIcon,
-  FileTextIcon
+  FileTextIcon,
+  EyeIcon
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -203,18 +204,7 @@ export function PublisherScreensClientPage({ screens, userName = "Publicador" }:
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="font-bold text-sm tracking-tight text-foreground">{screen.name}</span>
-                        <div className="flex items-center gap-2">
-                          <code className="text-[11px] bg-muted/60 px-2 py-0.5 rounded-md font-mono text-muted-foreground border border-border/40">
-                            /screens/{screen.slug}
-                          </code>
-                          <button 
-                            onClick={() => handleCopyUrl(screen.slug)}
-                            title="Copiar URL reproductor"
-                            className="text-muted-foreground hover:text-primary transition-colors p-1"
-                          >
-                            {copiedSlug === screen.slug ? <CheckIcon className="size-3.5 text-emerald-400" /> : <CopyIcon className="size-3.5" />}
-                          </button>
-                        </div>
+                        <span className="text-[11px] text-muted-foreground font-mono">ID: {screen.slug}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -263,14 +253,14 @@ export function PublisherScreensClientPage({ screens, userName = "Publicador" }:
                       </Link>
 
                       <a
-                        href={`/screens/${screen.slug}`}
+                        href={`/screens/${screen.slug}?preview=true`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        title="Ver Reproductor de Pantalla"
+                        title="Vista previa de la pantalla"
                       >
-                        <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-primary/30 text-primary hover:bg-primary/15 font-semibold text-xs gap-1.5">
-                          <span>Ver TV</span>
-                          <ExternalLinkIcon className="size-3.5" />
+                        <Button variant="outline" size="sm" className="h-8 px-3 rounded-lg border-amber-500/40 text-amber-400 hover:bg-amber-500/15 font-bold text-xs gap-1.5">
+                          <EyeIcon className="size-3.5" />
+                          <span>Vista Previa</span>
                         </Button>
                       </a>
                     </div>

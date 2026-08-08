@@ -13,7 +13,7 @@ export interface FormattedVideoResult {
   url: string;
 }
 
-export function formatVideoUrl(url: string, platformHint: VideoPlatform = "auto", muted: boolean = false): FormattedVideoResult {
+export function formatVideoUrl(url: string, platformHint: VideoPlatform = "auto", muted: boolean = true): FormattedVideoResult {
   if (!url) return { platform: "direct", isIframe: false, url: "" };
 
   const cleanUrl = url.trim();
@@ -26,7 +26,7 @@ export function formatVideoUrl(url: string, platformHint: VideoPlatform = "auto"
     return {
       platform: "youtube",
       isIframe: true,
-      url: `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=${muteParam}&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`,
+      url: `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=${muteParam}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`,
     };
   }
 
@@ -48,7 +48,7 @@ export function formatVideoUrl(url: string, platformHint: VideoPlatform = "auto"
     return {
       platform: "vimeo",
       isIframe: true,
-      url: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${muteParam}&background=0`,
+      url: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=${muteParam}&background=0`,
     };
   }
 

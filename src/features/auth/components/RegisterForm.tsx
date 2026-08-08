@@ -35,12 +35,13 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 bg-card text-card-foreground rounded-2xl shadow-xl border border-border transition-all duration-300">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+    <div className="w-full max-w-md p-8 space-y-6 bg-card/85 text-card-foreground rounded-3xl shadow-2xl backdrop-blur-xl border border-border/80 transition-all duration-300 relative overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 size-48 rounded-full bg-primary/15 blur-3xl" />
+      <div className="space-y-2 text-center relative z-10">
+        <h1 className="text-3xl font-black tracking-tight text-foreground">
           Crea tu cuenta
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground font-medium">
           Únete a nuestra comunidad hoy mismo
         </p>
       </div>

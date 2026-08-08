@@ -20,7 +20,9 @@ import {
   CalendarIcon, 
   ImageIcon, 
   LayoutDashboardIcon,
-  SparklesIcon
+  ShieldCheckIcon,
+  SparklesIcon,
+  FolderIcon
 } from "lucide-react"
 
 import Link from "next/link"
@@ -49,15 +51,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       { title: "Dashboard", icon: LayoutDashboardIcon, url: "/admin" },
       { title: "Gestión de Pantallas", icon: TvIcon, url: "/admin/screens" },
       { title: "Gestión de Usuarios", icon: UsersIcon, url: "/admin/users" },
-      { title: "Monitoreo Global", icon: MonitorIcon, url: "/monitoring" },
-      { title: "Configuración", icon: SettingsIcon, url: "/admin/settings" },
+      { title: "Auditoría de Contenidos", icon: ShieldCheckIcon, url: "/admin/audit" },
+      { title: "Programación Global", icon: CalendarIcon, url: "/admin/schedule" },
     ],
     publisher: [
       { title: "Dashboard", icon: LayoutDashboardIcon, url: "/publisher" },
-      { title: "Mis Pantallas", icon: TvIcon, url: "/publisher/screens" },
-      { title: "Contenidos", icon: FileTextIcon, url: "/publisher/content" },
-      { title: "Programación", icon: CalendarIcon, url: "/publisher/schedule" },
-      { title: "Biblioteca Multimedia", icon: ImageIcon, url: "/publisher/media" },
+      { title: "Mis Publicaciones", icon: FolderIcon, url: "/publisher/content" },
     ]
   }
 
@@ -66,33 +65,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-border/40 bg-card/60 backdrop-blur-md" {...props}>
       <SidebarHeader className="p-4 border-b border-border/30">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="hover:bg-transparent"
-            >
-              <Link href="/" className="flex items-center gap-3">
-                <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 text-primary shadow-sm">
-                  <Image 
-                    src="/logo.png" 
-                    alt="ScreenHub Logo" 
-                    width={22} 
-                    height={22} 
-                    className="object-contain"
-                  />
-                </div>
-                <div className="flex flex-col items-start leading-tight">
-                  <span className="text-lg font-black tracking-tight text-foreground">ScreenHub</span>
-                  <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-1">
-                    <SparklesIcon className="size-2.5 text-primary" />
-                    {roleLabel}
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Link href="/" className="flex items-center gap-3 group/logo p-1 rounded-xl hover:bg-accent/40 transition-colors">
+          <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 text-primary shadow-sm group-hover/logo:scale-105 transition-transform">
+            <Image 
+              src="/logo.png" 
+              alt="ScreenHub Logo" 
+              width={24} 
+              height={24} 
+              className="object-contain"
+            />
+          </div>
+          <div className="flex flex-col items-start justify-center min-w-0">
+            <span className="text-base font-extrabold tracking-tight text-foreground leading-snug">
+              ScreenHub
+            </span>
+            <span className="text-[11px] font-bold uppercase text-primary tracking-wider flex items-center gap-1 leading-none mt-0.5">
+              <SparklesIcon className="size-3 shrink-0 text-primary" />
+              <span>{roleLabel}</span>
+            </span>
+          </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">

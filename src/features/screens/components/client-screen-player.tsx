@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { ContentItem, Screen } from "@/generated/prisma";
 import { formatVideoUrl } from "@/lib/utils";
 import { AnimeTextSplit } from "@/features/content/components/anime-text-split";
+import { QRCodeDisplay } from "@/features/content/components/qr-code-display";
 import { 
   MonitorIcon, 
   MapPinIcon, 
@@ -15,7 +16,8 @@ import {
   GlobeIcon, 
   ImageIcon, 
   VideoIcon,
-  Volume2Icon
+  Volume2Icon,
+  ClockIcon
 } from "lucide-react";
 
 export type ScreenWithContent = Screen & {
@@ -177,10 +179,38 @@ function getDynamicVariants(transitionName: string, duration: number = 1.0): Var
 export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScreenPlayerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const isEnabled = isPreviewMode || screen.status === "active";
-  const activeContents = (screen.contents || []).filter((c) => c.isActive);
+
+  const activeContents = useMemo(() => {
+    return (screen.contents || []).filter((c) => c.isActive);
+  }, [screen.contents]);
+
+  const activeContentsRef = useRef(activeContents);
+  useEffect(() => {
+    activeContentsRef.current = activeContents;
+  }, [activeContents]);
+
+  // Keep currentIndex within bounds if contents count changes
+  useEffect(() => {
+    if (currentIndex >= activeContents.length && activeContents.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [activeContents.length, currentIndex]);
+
+  const masterVolume = (screen as any).volume !== undefined ? Math.max(0, Math.min(100, (screen as any).volume)) / 100 : 1.0;
   const currentContent = activeContents[currentIndex];
+
+  const enableAudioOnUserInteraction = () => {
+    setIsAudioMuted(false);
+    if (videoRef.current) {
+      videoRef.current.muted = masterVolume === 0;
+      videoRef.current.volume = masterVolume;
+      videoRef.current.play().catch(() => {});
+    }
+  };
 
   // Auto-sync / Realtime revalidation every 15s
   useEffect(() => {
@@ -191,9 +221,10 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
   }, [router]);
 
   const goToNextContent = useCallback(() => {
-    if (activeContents.length <= 1) return;
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % activeContents.length);
-  }, [activeContents.length]);
+    const list = activeContentsRef.current;
+    if (list.length <= 1) return;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % list.length);
+  }, []);
 
   // Listen to postMessage events from YouTube / Vimeo iframe players for 100% Video Completion
   useEffect(() => {
@@ -227,24 +258,41 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
     if (!isEnabled || activeContents.length <= 1) return;
 
     const currentItem = activeContents[currentIndex];
-    
-    // FOR ALL VIDEO TYPES: Never cut off videos by a short timer!
-    if (currentItem?.type === "video") {
-      // 10-minute maximum safety fallback if a live stream or iframe never emits end event
-      const fallbackTimer = setTimeout(() => {
-        goToNextContent();
-      }, 600000);
-      return () => clearTimeout(fallbackTimer);
+    if (!currentItem) return;
+
+    let durationMs: number;
+    if (currentItem.type === "video") {
+      // If explicit duration > 0 is set, cut at that exact time; otherwise play video completely with 45s max safety fallback
+      if (currentItem.duration && currentItem.duration > 0) {
+        durationMs = Math.max(1, currentItem.duration) * 1000;
+      } else {
+        durationMs = 45000; // 45-second safety fallback if video fails to emit ended event
+      }
+    } else {
+      const durationSeconds = currentItem.duration && currentItem.duration > 0 ? currentItem.duration : 10;
+      durationMs = Math.max(3, durationSeconds) * 1000;
     }
 
-    // For Image / Text / Web items: use programmed duration (min 3s)
-    const durationMs = Math.max(3, currentItem?.duration || 10) * 1000;
     const timer = setTimeout(() => {
       goToNextContent();
     }, durationMs);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, activeContents, isEnabled, goToNextContent]);
+  }, [currentIndex, isEnabled, activeContents.length, goToNextContent]);
+
+  const [currentTimeString, setCurrentTimeString] = useState<string>("");
+  const [currentDateString, setCurrentDateString] = useState<string>("");
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setCurrentTimeString(now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+      setCurrentDateString(now.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Screen Disabled View
   if (!isEnabled) {
@@ -271,23 +319,52 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
     );
   }
 
-  // Active Screen without Programmed Content View
+  // Active Screen without Programmed Content View (Static Standby Screen)
   if (!currentContent) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#050811] text-white flex flex-col items-center justify-center p-8 select-none overflow-hidden font-sans">
-        <div className="text-center space-y-5 max-w-xl">
-          <div className="size-24 rounded-3xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary mx-auto animate-pulse shadow-2xl">
-            <MonitorIcon className="size-12" />
+      <div className="fixed inset-0 z-50 bg-[#040711] text-white flex flex-col items-center justify-between p-12 select-none overflow-hidden font-sans">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-40 -left-40 size-96 rounded-full bg-primary/10 blur-[120px]" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 -right-40 size-96 rounded-full bg-emerald-500/10 blur-[120px]" />
+
+        {/* Top Header */}
+        <div className="w-full flex items-center justify-between z-10">
+          <div className="flex items-center gap-3 bg-white/[0.04] border border-white/10 px-4 py-2 rounded-2xl backdrop-blur-xl">
+            <MonitorIcon className="size-5 text-primary" />
+            <span className="text-sm font-extrabold tracking-tight text-white">{screen.name}</span>
           </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-bold text-amber-400">
+            <ClockIcon className="size-3.5" />
+            <span>Sin Programación Activa</span>
+          </div>
+        </div>
+
+        {/* Center Clock & Standby Message */}
+        <div className="text-center space-y-6 max-w-2xl z-10">
           <div className="space-y-2">
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white">{screen.name}</h2>
-            <p className="text-sm text-primary font-bold flex items-center justify-center gap-1.5">
-              <MapPinIcon className="size-4" /> {screen.location}
+            <div className="text-6xl sm:text-8xl font-black font-mono tracking-tight text-white drop-shadow-2xl">
+              {currentTimeString || "00:00:00"}
+            </div>
+            <div className="text-base sm:text-lg font-semibold text-white/60 capitalize">
+              {currentDateString}
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/10">
+            <h2 className="text-3xl font-black text-amber-400">Sin Contenido Programado</h2>
+            <p className="text-sm font-extrabold text-white flex items-center justify-center gap-1.5">
+              📺 {screen.name} — <MapPinIcon className="size-4 text-primary inline" /> {screen.location}
+            </p>
+            <p className="text-xs text-white/60 max-w-md mx-auto leading-relaxed pt-2">
+              No hay publicaciones ni contenidos programados para esta pantalla en la franja horaria actual. La emisión se iniciará automáticamente cuando el Administrador programe un contenido.
             </p>
           </div>
-          <p className="text-xs text-white/40 font-mono pt-4 border-t border-white/10">
-            Esperando programación de contenido por el usuario publicador...
-          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-between text-xs text-white/30 font-mono z-10 border-t border-white/10 pt-4">
+          <span>ScreenHub Digital Signage</span>
+          <span>Estado: Standby en Espera</span>
         </div>
       </div>
     );
@@ -295,12 +372,6 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
 
   const animDuration = (currentContent as any)?.transitionDuration || 1.0;
   const selectedVariants = getDynamicVariants(currentContent.transition, animDuration);
-
-  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
-
-  const enableAudioOnUserInteraction = () => {
-    setIsAudioMuted(false);
-  };
 
   return (
     <div 
@@ -312,14 +383,6 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
         <div className="fixed top-4 right-4 z-50 pointer-events-none opacity-85 backdrop-blur-md bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-2xl animate-pulse">
           <EyeIcon className="size-4 text-amber-400" />
           <span>VISTA PREVIA ({currentIndex + 1}/{activeContents.length})</span>
-        </div>
-      )}
-
-      {/* Floating Audio Unmute Indicator Banner (if browser blocked unmuted autoplay) */}
-      {isAudioMuted && currentContent?.type === "video" && (
-        <div className="fixed top-6 inset-x-0 mx-auto w-max z-50 pointer-events-none backdrop-blur-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-5 py-2 rounded-full text-xs font-black flex items-center gap-2.5 shadow-2xl animate-bounce">
-          <Volume2Icon className="size-4 text-emerald-400 animate-pulse" />
-          <span>Toca la pantalla para activar el audio de los videos</span>
         </div>
       )}
 
@@ -380,9 +443,10 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                     <video 
                       key={media.url}
                       ref={(el) => {
+                        videoRef.current = el;
                         if (el) {
-                          el.muted = isAudioMuted;
-                          el.volume = 1.0;
+                          el.volume = masterVolume;
+                          el.muted = masterVolume === 0;
                           const playPromise = el.play();
                           if (playPromise !== undefined) {
                             playPromise.catch(() => {
@@ -398,8 +462,8 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                       autoPlay 
                       playsInline
                       onLoadedMetadata={(e) => {
-                        e.currentTarget.muted = isAudioMuted;
-                        e.currentTarget.volume = 1.0;
+                        e.currentTarget.volume = masterVolume;
+                        e.currentTarget.muted = masterVolume === 0;
                         e.currentTarget.play().catch(() => {
                           e.currentTarget.muted = true;
                           setIsAudioMuted(true);
@@ -407,6 +471,7 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                         });
                       }}
                       onEnded={goToNextContent}
+                      onError={goToNextContent}
                       className="w-full h-full object-cover" 
                     />
                   );
@@ -421,18 +486,35 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
           )}
 
           {currentContent.type === "text" && (
-            <div className="w-full h-full bg-gradient-to-br from-[#0a0f24] via-[#050811] to-[#120e29] text-white flex flex-col items-center justify-center p-12 text-center space-y-8">
-              <div className="size-24 rounded-3xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-2xl">
-                <FileTextIcon className="size-12 text-amber-400" />
-              </div>
-              <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-tight max-w-5xl drop-shadow-md">
-                {currentContent.title}
-              </h1>
-              {currentContent.body && (
-                <p className="text-2xl sm:text-4xl font-semibold text-amber-200/90 leading-relaxed max-w-4xl bg-white/[0.03] border border-white/10 p-10 rounded-3xl backdrop-blur-xl shadow-2xl">
-                  "{currentContent.body}"
-                </p>
+            <div 
+              className="w-full h-full text-white flex flex-col items-center justify-center p-12 text-center space-y-8 relative overflow-hidden"
+              style={
+                (currentContent as any).bgType === "color"
+                  ? { backgroundColor: (currentContent as any).bgValue || "#0a0f24" }
+                  : (currentContent as any).bgType === "gradient"
+                  ? { background: (currentContent as any).bgValue || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)" }
+                  : (currentContent as any).bgType === "image" && (currentContent as any).bgValue
+                  ? { backgroundImage: `url(${(currentContent as any).bgValue})`, backgroundSize: "cover", backgroundPosition: "center" }
+                  : { background: "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)" }
+              }
+            >
+              {(currentContent as any).bgType === "image" && (currentContent as any).bgValue && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-0" />
               )}
+
+              <div className="relative z-10 flex flex-col items-center justify-center space-y-8 max-w-5xl">
+                <div className="size-24 rounded-3xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-2xl backdrop-blur-md">
+                  <FileTextIcon className="size-12 text-amber-400 drop-shadow-md" />
+                </div>
+                <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-tight drop-shadow-2xl text-white">
+                  {currentContent.title}
+                </h1>
+                {currentContent.body && (
+                  <p className="text-2xl sm:text-4xl font-semibold text-amber-200/95 leading-relaxed max-w-4xl bg-black/40 border border-white/15 p-10 rounded-3xl backdrop-blur-xl shadow-2xl drop-shadow-lg">
+                    "{currentContent.body}"
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -458,6 +540,19 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
               imageUrl={currentContent.url || ""}
               title={currentContent.title}
               body={currentContent.body || ""}
+              effect={currentContent.transition}
+              bgType={(currentContent as any).bgType || "gradient"}
+              bgValue={(currentContent as any).bgValue || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"}
+            />
+          )}
+
+          {currentContent.type === "qr" && (
+            <QRCodeDisplay 
+              url={currentContent.url || "https://screenhub.com"}
+              title={currentContent.title}
+              body={currentContent.body || ""}
+              bgType={(currentContent as any).bgType || "gradient"}
+              bgValue={(currentContent as any).bgValue || "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)"}
             />
           )}
         </motion.div>

@@ -15,7 +15,7 @@ import { hasUsers } from "@/features/auth";
 export default async function Home() {
   const usersExist = await hasUsers();
   return (
-    <div className="relative flex flex-col min-h-screen bg-background bg-aic-grid overflow-hidden">
+    <div className="relative flex flex-col min-h-screen bg-background overflow-hidden">
       {/* Background ambient glow spots */}
       <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/15 blur-[120px] animate-aic-glow" />
       <div aria-hidden="true" className="pointer-events-none absolute top-1/3 -right-40 h-[400px] w-[400px] rounded-full bg-primary/10 blur-[100px]" />
@@ -73,7 +73,7 @@ export default async function Home() {
             
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1]">
               Gestiona tus pantallas <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent">
                 con potencia sin límites.
               </span>
             </h1>
@@ -101,38 +101,38 @@ export default async function Home() {
         </section>
 
         {/* AI Canvas Feature Cards */}
-        <section className="py-20 border-t border-border/40 bg-card/30 backdrop-blur-xs">
+        <section className="py-20 border-t border-border/40 bg-card/40 backdrop-blur-sm">
           <div className="container px-4 md:px-8 max-w-6xl mx-auto space-y-12">
             <div className="text-center space-y-3">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Diseñado para la máxima eficiencia</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Diseñado para la máxima eficiencia</h2>
               <p className="text-muted-foreground text-sm sm:text-base">Múltiples roles, control absoluto y velocidad de nivel empresarial.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              <div className="relative group overflow-hidden rounded-2xl border border-border/60 bg-card/70 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5">
+              <div className="relative group overflow-hidden rounded-2xl border border-border/70 bg-card/80 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
                 <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 size-36 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100" />
                 <div className="size-12 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-primary mb-5 group-hover:scale-110 transition-transform">
                   <MonitorIcon className="size-6" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Gestión en Tiempo Real</h3>
+                <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">Gestión en Tiempo Real</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">Monitorea y actualiza el estado de cada pantalla al instante con telemetría en vivo.</p>
               </div>
 
-              <div className="relative group overflow-hidden rounded-2xl border border-border/60 bg-card/70 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5">
+              <div className="relative group overflow-hidden rounded-2xl border border-border/70 bg-card/80 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
                 <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 size-36 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100" />
                 <div className="size-12 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-primary mb-5 group-hover:scale-110 transition-transform">
                   <ShieldCheckIcon className="size-6" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Seguridad y Roles</h3>
+                <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">Seguridad y Roles</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">Layouts y permisos aislados para Administradores, Publicadores y Auditores.</p>
               </div>
 
-              <div className="relative group overflow-hidden rounded-2xl border border-border/60 bg-card/70 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5">
+              <div className="relative group overflow-hidden rounded-2xl border border-border/70 bg-card/80 p-7 backdrop-blur-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
                 <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 size-36 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100" />
                 <div className="size-12 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-primary mb-5 group-hover:scale-110 transition-transform">
                   <ZapIcon className="size-6" />
                 </div>
-                <h3 className="text-xl font-bold tracking-tight mb-2">Despliegue Ultra Rápido</h3>
+                <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">Despliegue Ultra Rápido</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">Optimizado con Next.js App Router y Turbopack para cargas y cambios instantáneos.</p>
               </div>
             </div>
