@@ -436,6 +436,15 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                           allowFullScreen
                           referrerPolicy="strict-origin-when-cross-origin"
                           className="w-full h-full border-0"
+                          onLoad={(e) => {
+                            const frameEl = e.currentTarget;
+                            setTimeout(() => {
+                              try {
+                                frameEl.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                                frameEl.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                              } catch (_) {}
+                            }, 300);
+                          }}
                         />
                         <div className="absolute inset-0 z-10 bg-transparent pointer-events-none" />
                       </div>
