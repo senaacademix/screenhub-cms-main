@@ -684,8 +684,8 @@ export function EditContentDialog({ content, open, onOpenChange, isLocked = fals
                         </div>
                       )}
                       {textBody && (
-                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 text-center">
-                          <p className="text-sm font-extrabold text-white">{textBody}</p>
+                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-5 text-center">
+                          <p className="text-lg font-black text-white drop-shadow-md leading-tight">{textBody}</p>
                         </div>
                       )}
                     </div>

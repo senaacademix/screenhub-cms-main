@@ -412,8 +412,8 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                 </div>
               )}
               {currentContent.body && (
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-10 text-center">
-                  <p className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-10 sm:p-14 md:p-16 text-center z-20">
+                  <p className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white drop-shadow-[0_10px_25px_rgba(0,0,0,0.9)] tracking-tight leading-tight">
                     {currentContent.body}
                   </p>
                 </div>
