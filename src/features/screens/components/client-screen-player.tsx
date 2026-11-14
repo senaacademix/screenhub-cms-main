@@ -179,7 +179,7 @@ function getDynamicVariants(transitionName: string, duration: number = 1.0): Var
 export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScreenPlayerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const isEnabled = isPreviewMode || screen.status === "active";
@@ -432,10 +432,12 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                         <iframe
                           src={media.url}
                           title={currentContent.title}
-                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          referrerPolicy="strict-origin-when-cross-origin"
                           className="w-full h-full border-0"
                         />
-                        <div className="absolute inset-0 z-10 bg-transparent" />
+                        <div className="absolute inset-0 z-10 bg-transparent pointer-events-none" />
                       </div>
                     );
                   }
@@ -487,7 +489,7 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
 
           {currentContent.type === "text" && (
             <div 
-              className="w-full h-full text-white flex flex-col items-center justify-center p-12 text-center space-y-8 relative overflow-hidden"
+              className="w-full h-full text-white flex flex-col items-center justify-center p-8 sm:p-14 md:p-20 text-center relative overflow-hidden"
               style={
                 (currentContent as any).bgType === "color"
                   ? { backgroundColor: (currentContent as any).bgValue || "#0a0f24" }
@@ -502,15 +504,18 @@ export function ClientScreenPlayer({ screen, isPreviewMode = false }: ClientScre
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xs z-0" />
               )}
 
-              <div className="relative z-10 flex flex-col items-center justify-center space-y-8 max-w-5xl">
-                <div className="size-24 rounded-3xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-2xl backdrop-blur-md">
-                  <FileTextIcon className="size-12 text-amber-400 drop-shadow-md" />
+              {/* Decorative ambient glow sphere for signage presence */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[650px] rounded-full bg-primary/20 blur-[130px] pointer-events-none z-0" />
+
+              <div className="relative z-10 flex flex-col items-center justify-center space-y-8 sm:space-y-12 md:space-y-14 w-full max-w-7xl px-4">
+                <div className="size-24 sm:size-32 md:size-40 rounded-3xl sm:rounded-[2.5rem] bg-amber-500/15 border-2 border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-2xl backdrop-blur-xl">
+                  <FileTextIcon className="size-12 sm:size-16 md:size-20 text-amber-400 drop-shadow-lg" />
                 </div>
-                <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-tight drop-shadow-2xl text-white">
+                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight leading-tight drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)] text-white max-w-6xl">
                   {currentContent.title}
                 </h1>
                 {currentContent.body && (
-                  <p className="text-2xl sm:text-4xl font-semibold text-amber-200/95 leading-relaxed max-w-4xl bg-black/40 border border-white/15 p-10 rounded-3xl backdrop-blur-xl shadow-2xl drop-shadow-lg">
+                  <p className="w-full max-w-5xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-amber-200/95 leading-relaxed bg-black/50 border-2 border-white/20 p-8 sm:p-12 md:p-16 rounded-3xl sm:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl drop-shadow-xl text-center">
                     "{currentContent.body}"
                   </p>
                 )}

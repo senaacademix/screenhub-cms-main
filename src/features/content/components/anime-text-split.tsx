@@ -293,20 +293,20 @@ export function AnimeTextSplit({
     return { background: "linear-gradient(135deg, #0a0f24 0%, #050811 50%, #120e29 100%)" };
   };
 
-  // Dynamic font size calculator so long titles & subtitles NEVER break or truncate!
+  // Dynamic font size calculator calibrated for Digital Signage screens!
   const getTitleFontSize = (text: string) => {
     const len = (text || "").length;
-    if (len > 40) return "text-sm sm:text-base md:text-lg lg:text-xl font-black leading-snug";
-    if (len > 25) return "text-base sm:text-lg md:text-xl lg:text-2xl font-black leading-snug";
-    if (len > 15) return "text-lg sm:text-xl md:text-2xl lg:text-3xl font-black leading-tight";
-    return "text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight";
+    if (len > 50) return "text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black leading-snug";
+    if (len > 30) return "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight";
+    if (len > 15) return "text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight";
+    return "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight tracking-tight";
   };
 
   const getBodyFontSize = (text: string) => {
     const len = (text || "").length;
-    if (len > 120) return "text-[10px] sm:text-xs md:text-xs font-medium leading-normal";
-    if (len > 60) return "text-xs sm:text-xs md:text-sm font-medium leading-relaxed";
-    return "text-xs sm:text-sm md:text-base font-medium leading-relaxed";
+    if (len > 120) return "text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-relaxed";
+    if (len > 60) return "text-base sm:text-lg md:text-xl lg:text-2xl font-semibold leading-relaxed";
+    return "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-relaxed";
   };
 
   return (
@@ -322,7 +322,8 @@ export function AnimeTextSplit({
               <iframe
                 src={formattedMedia.url}
                 title={title || "Anime Split Video"}
-                allow="autoplay; encrypted-media; fullscreen"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
                 className="w-full h-full border-0 pointer-events-none"
               />
             ) : (
@@ -344,15 +345,15 @@ export function AnimeTextSplit({
           )
         ) : (
           <div className="text-center p-6 text-white/40 flex flex-col items-center justify-center">
-            <ImageIcon className="size-14 mx-auto mb-3 opacity-40 text-primary" />
-            <p className="text-xs font-medium text-white/60">Ingresa la URL de la imagen o video principal</p>
+            <ImageIcon className="size-16 mx-auto mb-3 opacity-40 text-primary" />
+            <p className="text-sm font-medium text-white/60">Ingresa la URL de la imagen o video principal</p>
           </div>
         )}
       </div>
 
       {/* Right Column (50% Anime.js Typography Studio with Custom Background & Auto-scaling) */}
       <div
-        className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col justify-center p-5 sm:p-7 md:p-10 relative overflow-hidden"
+        className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col justify-center p-8 sm:p-12 md:p-14 lg:p-16 xl:p-20 relative overflow-hidden"
         style={getBackgroundStyle()}
       >
         {/* Dark overlay backdrop if background is image */}
@@ -361,12 +362,12 @@ export function AnimeTextSplit({
         )}
 
         {/* Glow ambient background sphere */}
-        <div className="absolute top-1/4 right-10 size-64 rounded-full bg-primary/15 blur-3xl pointer-events-none z-0" />
+        <div className="absolute top-1/4 right-10 size-96 rounded-full bg-primary/20 blur-[100px] pointer-events-none z-0" />
 
-        <div className="relative z-10 flex flex-col justify-center max-h-full space-y-3.5 overflow-hidden">
+        <div className="relative z-10 flex flex-col justify-center max-h-full space-y-6 sm:space-y-8 overflow-hidden">
           <h2
             ref={titleRef}
-            className={`${getTitleFontSize(title)} text-white drop-shadow-2xl font-extrabold tracking-tight`}
+            className={`${getTitleFontSize(title)} text-white drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)] font-black tracking-tight`}
           >
             {renderTitleLetters(title)}
           </h2>
@@ -374,13 +375,13 @@ export function AnimeTextSplit({
           {/* Glowing Animated Accent Line */}
           <div
             ref={lineRef}
-            className="h-1 bg-gradient-to-r from-primary via-amber-400 to-emerald-400 rounded-full w-full shadow-lg shrink-0 my-1"
+            className="h-2 sm:h-2.5 md:h-3 bg-gradient-to-r from-primary via-amber-400 to-emerald-400 rounded-full w-full shadow-[0_0_20px_rgba(59,130,246,0.6)] shrink-0 my-2 sm:my-3"
           />
 
           {body && (
             <p
               ref={bodyRef}
-              className={`${getBodyFontSize(body)} text-amber-200/95 bg-black/40 border border-white/15 p-3.5 sm:p-4 rounded-2xl backdrop-blur-xl shadow-2xl relative z-10 drop-shadow-md overflow-hidden text-ellipsis line-clamp-5`}
+              className={`${getBodyFontSize(body)} text-amber-200/95 bg-black/50 border-2 border-white/20 p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl relative z-10 drop-shadow-xl overflow-hidden text-ellipsis line-clamp-5`}
             >
               "{body}"
             </p>

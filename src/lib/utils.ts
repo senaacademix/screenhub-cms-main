@@ -23,10 +23,13 @@ export function formatVideoUrl(url: string, platformHint: VideoPlatform = "auto"
   const ytMatch = cleanUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
   if (ytMatch && ytMatch[1] && (platformHint === "auto" || platformHint === "youtube")) {
     const ytId = ytMatch[1];
+    const originParam = typeof window !== "undefined" && window.location?.origin && window.location.origin.startsWith("http")
+      ? `&origin=${encodeURIComponent(window.location.origin)}`
+      : "";
     return {
       platform: "youtube",
       isIframe: true,
-      url: `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=${muteParam}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1`,
+      url: `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muteParam}&controls=0&modestbranding=1&rel=0&enablejsapi=1&playsinline=1&loop=1&playlist=${ytId}${originParam}`,
     };
   }
 

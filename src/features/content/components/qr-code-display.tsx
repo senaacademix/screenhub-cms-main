@@ -18,7 +18,7 @@ export function QRCodeDisplay({
   bgValue,
 }: QRCodeDisplayProps) {
   const targetUrl = url?.trim() || "https://screenhub.com";
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(targetUrl)}&color=000000&bgcolor=ffffff&margin=10`;
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(targetUrl)}&color=000000&bgcolor=ffffff&margin=15`;
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (bgType === "color") {
@@ -35,20 +35,21 @@ export function QRCodeDisplay({
 
   const getTitleFontSize = (text: string) => {
     const len = (text || "").length;
-    if (len > 40) return "text-xs sm:text-sm md:text-base font-black leading-snug";
-    if (len > 25) return "text-sm sm:text-base md:text-lg font-black leading-snug";
-    return "text-base sm:text-xl md:text-2xl font-black leading-tight";
+    if (len > 40) return "text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-snug";
+    if (len > 20) return "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight";
+    return "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight";
   };
 
   const getBodyFontSize = (text: string) => {
     const len = (text || "").length;
-    if (len > 90) return "text-[10px] sm:text-xs font-medium leading-normal";
-    return "text-xs sm:text-sm font-medium leading-relaxed";
+    if (len > 120) return "text-base sm:text-lg md:text-xl lg:text-2xl font-medium leading-relaxed";
+    if (len > 60) return "text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-relaxed";
+    return "text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-relaxed";
   };
 
   return (
     <div
-      className="w-full h-full text-white flex items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden select-none"
+      className="w-full h-full text-white flex items-center justify-center p-6 sm:p-10 md:p-16 relative overflow-hidden select-none"
       style={getBackgroundStyle()}
     >
       {/* Dark overlay backdrop if background is image */}
@@ -57,43 +58,43 @@ export function QRCodeDisplay({
       )}
 
       {/* Subtle ambient glow sphere */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 rounded-full bg-primary/15 blur-3xl pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[650px] rounded-full bg-primary/20 blur-[130px] pointer-events-none z-0" />
 
-      {/* Harmonious Balanced Container */}
-      <div className="relative z-10 w-full max-w-3xl flex flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 max-h-full overflow-hidden">
-        {/* QR Code Card (Compact, Refined & Elegant) */}
+      {/* Harmonious Balanced Container for Signage Displays */}
+      <div className="relative z-10 w-full max-w-7xl flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-16 px-4 sm:px-8 max-h-full overflow-hidden">
+        {/* QR Code Card (Large, High-impact Signage Scanner) */}
         <div className="shrink-0 flex flex-col items-center">
           <div className="relative group">
-            {/* Subtle Glow Ring */}
-            <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-r from-primary via-amber-400 to-emerald-400 opacity-60 blur-sm group-hover:opacity-90 transition-opacity" />
+            {/* Vibrant Glow Ring */}
+            <div className="absolute -inset-2.5 rounded-3xl bg-gradient-to-r from-primary via-amber-400 to-emerald-400 opacity-75 blur-md group-hover:opacity-100 transition-opacity" />
 
-            <div className="relative bg-white p-2.5 sm:p-3.5 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+            <div className="relative bg-white p-5 sm:p-7 md:p-9 rounded-3xl shadow-2xl flex flex-col items-center justify-center">
               <img
                 src={qrCodeApiUrl}
                 alt={`Código QR: ${targetUrl}`}
-                className="size-28 sm:size-36 md:size-44 object-contain rounded-lg"
+                className="size-52 sm:size-72 md:size-84 lg:size-96 xl:size-[400px] object-contain rounded-2xl"
               />
-              <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-300 text-[10px] font-black uppercase tracking-wider shadow-sm">
-                <SmartphoneIcon className="size-3" />
+              <div className="mt-4 sm:mt-5 inline-flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full bg-slate-950 text-amber-300 text-xs sm:text-sm md:text-base font-black uppercase tracking-widest shadow-xl">
+                <SmartphoneIcon className="size-4 sm:size-5" />
                 <span>Escanea Aquí</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Text Details (Clean Spacing & Auto-scaling) */}
-        <div className="flex-1 flex flex-col justify-center space-y-3 text-left min-w-0 max-h-full overflow-hidden">
-          <h1 className={`${getTitleFontSize(title)} text-white drop-shadow-md tracking-tight break-words font-extrabold`}>
+        {/* Text Details (Clean Spacing & Signage Auto-scaling) */}
+        <div className="flex-1 flex flex-col justify-center space-y-4 sm:space-y-6 text-center lg:text-left min-w-0 max-h-full overflow-hidden">
+          <h1 className={`${getTitleFontSize(title)} text-white drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)] tracking-tight break-words font-black`}>
             {title || "Escanea para más información"}
           </h1>
 
           {body ? (
-            <p className={`${getBodyFontSize(body)} text-amber-200/90 bg-black/40 border border-white/15 p-3 sm:p-4 rounded-xl backdrop-blur-md shadow-lg drop-shadow-sm overflow-hidden text-ellipsis line-clamp-4`}>
+            <p className={`${getBodyFontSize(body)} text-amber-200/95 bg-black/50 border-2 border-white/20 p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl drop-shadow-lg overflow-hidden text-ellipsis line-clamp-4`}>
               "{body}"
             </p>
           ) : (
-            <p className="text-[11px] sm:text-xs font-medium text-white/70 leading-relaxed">
-              Apunta la cámara de tu smartphone al código QR para acceder a la URL y contenido interactivo de forma instantánea.
+            <p className="text-base sm:text-xl md:text-2xl font-medium text-white/80 leading-relaxed max-w-2xl">
+              Apunta la cámara de tu smartphone al código QR para acceder al contenido interactivo de forma instantánea.
             </p>
           )}
         </div>

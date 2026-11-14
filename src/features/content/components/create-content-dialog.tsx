@@ -710,7 +710,8 @@ export function CreateContentDialog({ publicationId, publicationTitle, screenId,
                               <iframe
                                 src={media.url}
                                 title="Video Platform Preview"
-                                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
                                 className="w-full h-full border-0 pointer-events-none"
                               />
                             );
